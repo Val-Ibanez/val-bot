@@ -33,12 +33,12 @@ app.error((error) => {
 (async () => {
   const port = process.env.PORT || 3000;
   
-  // El receiver ya tiene Express configurado, solo necesitamos iniciar el servidor
-  await app.start();
-  
-  // Iniciar el servidor Express en el puerto especificado
+  // El ExpressReceiver ya tiene el endpoint /slack/events configurado automáticamente
+  // y maneja el challenge de verificación de Slack
+  // Solo necesitamos iniciar el servidor Express
   receiver.app.listen(port, () => {
     console.log(`ValBot está corriendo 🚀 en puerto ${port}`);
     console.log(`Endpoint de Slack: http://localhost:${port}/slack/events`);
+    console.log(`El ExpressReceiver maneja automáticamente el challenge de verificación`);
   });
 })();
