@@ -1,4 +1,5 @@
-import { App } from "@slack/bolt";
+import pkg from '@slack/bolt';
+const { App } = pkg;
 
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
