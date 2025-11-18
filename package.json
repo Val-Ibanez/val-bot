@@ -1,0 +1,8 @@
+{
+  "name": "valbot",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "@slack/bolt": "^3.17.1"
+  }
+}
