@@ -18,11 +18,65 @@ app.event("app_mention", async ({ say }) => {
 });
 
 // Responde en mensajes directos (DM)
-app.message(async ({ message, say, client }) => {
+app.message(async ({ message, say }) => {
   // Verificar que es un mensaje directo y no del bot mismo
-  if (message.channel_type === "im" && message.subtype !== "bot_message") {
-    await say("¡Hola Val! Esta es una respuesta automática 🤖✨");
+  if (message.channel_type !== "im" || message.subtype === "bot_message") {
+    return;
   }
+
+  const texto = (message.text || "").toLowerCase().trim();
+
+  // Si el mensaje es muy corto (menos de 20 caracteres), probablemente es solo un saludo
+  if (texto.length < 20) {
+    // Normalizar removiendo signos y espacios extra
+    const limpio = texto
+      .replace(/[¿?¡!,.\-_\s]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    // Lista expandida de saludos y variaciones
+    const saludos = [
+      "hola",
+      "hola val",
+      "hola val como estas",
+      "hola como estas",
+      "hola como estas val",
+      "hola que tal",
+      "hola que tal val",
+      "buenas",
+      "buenos dias",
+      "buen dia",
+      "buenas tardes",
+      "buenas noches",
+      "hello",
+      "hey",
+      "holi",
+      "hi",
+      "que tal",
+      "que tal val",
+      "como estas",
+      "como estas val",
+      "como va",
+      "como va val",
+      "que onda",
+      "que onda val",
+      "saludos",
+      "buen dia val",
+      "buenas val"
+    ];
+
+    // Verificar si el mensaje es exactamente un saludo o empieza con uno
+    const esSaludo = saludos.includes(limpio) || 
+                     saludos.some(saludo => limpio.startsWith(saludo + " ") || limpio === saludo);
+
+    if (esSaludo) {
+      await say("Un saludo no es un mensaje 😄 https://nohello.com");
+      return;
+    }
+  }
+
+  // Respuesta por defecto
+  await say("¡Hola Val! Esta es una respuesta automática 🤖✨");
 });
 
 // Manejo de errores
@@ -34,8 +88,6 @@ app.error((error) => {
   const port = process.env.PORT || 3000;
   
   // Middleware para loggear todas las peticiones POST a /slack/events
-  // Esto ayuda a debuggear si Slack está enviando eventos correctamente
-  // Usamos app.use para que se ejecute antes que otros handlers
   receiver.app.use("/slack/events", (req, res, next) => {
     if (req.method === 'POST') {
       console.log("=== Slack Event Received ===");
@@ -43,15 +95,15 @@ app.error((error) => {
       console.log("Body:", JSON.stringify(req.body, null, 2));
       console.log("===========================");
     }
-    next(); // Pasar al siguiente handler (ExpressReceiver)
+    next();
   });
   
-  // Health check endpoint para mantener la app despierta en Render
+  // Health check endpoint
   receiver.app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok', service: 'val-bot' });
   });
   
-  // Endpoint raíz para verificar que el servidor está corriendo
+  // Root endpoint
   receiver.app.get('/', (req, res) => {
     res.status(200).json({ 
       status: 'ok', 
@@ -60,8 +112,6 @@ app.error((error) => {
     });
   });
   
-  // Handler para GET en /slack/events (para que Render/Slack puedan verificar que existe)
-  // El ExpressReceiver maneja POST automáticamente, pero GET necesita respuesta explícita
   receiver.app.get('/slack/events', (req, res) => {
     res.status(405).json({ 
       error: 'Method not allowed',
@@ -69,9 +119,6 @@ app.error((error) => {
     });
   });
   
-  // El ExpressReceiver ya tiene el endpoint /slack/events configurado automáticamente
-  // y maneja el challenge de verificación de Slack (POST requests)
-  // Solo necesitamos iniciar el servidor Express
   receiver.app.listen(port, () => {
     console.log(`ValBot está corriendo 🚀 en puerto ${port}`);
     console.log(`Endpoint de Slack: http://localhost:${port}/slack/events`);
